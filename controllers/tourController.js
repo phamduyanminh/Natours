@@ -1,10 +1,21 @@
 const express = require('express');
 const fs = require('fs');
 
-
 const tours = JSON.parse(
     fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
 );
+
+exports.checkID = (req, res, next, val) => {
+    console.log(`Tour id is: ${val}`)
+    if(req.params.id * 1 > tours.length){
+        return res.status(404).json({
+            status: 'Fail!',
+            message: `No tour ${val} found!`
+        })
+    }
+    console.log(`Tour id ${val} is valid`)
+    next()
+};
 
 exports.getAllTours = (req, res) => {
     res.status(200).json({
@@ -17,20 +28,10 @@ exports.getAllTours = (req, res) => {
 };
 
 exports.getTour = (req, res) => {
-    console.log(req.params)
-
-    const id = req.params.id * 1 //Automatically convert string to number value
-    const tour = tours.find(element => element.id === id)
-    if(!tour) return res.status(404).json({
-        status: 'Fail!',
-        message: 'No tour found!'
-    })
-    
     res.status(200).json({
-        status: 'Retrieve tour success',
-        result: id,
+        status: `Retrieve tour ${req.params.id} success`,
         data: {
-            tour: tour
+            tour: tours[req.params.id]
         }
     })
 };
@@ -53,15 +54,8 @@ exports.createTour = (req, res) => {
 };
 
 exports.updateTour = (req, res) => {
-    console.log(req.params)
-
-    if(req.params.id * 1 > tours.length) return res.status(404).json({
-        status: 'Fail!',
-        message: 'No tour found to update!'
-    })
-
     res.status(200).json({
-        status: 'Update tour success',
+        status: `Update tour ${req.params.id} success`,
         data: {
             tour: '<Updated tour here ...>'
         }
@@ -69,15 +63,8 @@ exports.updateTour = (req, res) => {
 };
 
 exports.deleteTour = (req, res) => {
-    console.log(req.params)
-
-    if(req.params.id * 1 > tours.length) return res.status(404).json({
-        status: 'Fail!',
-        message: 'No tour found to update!'
-    })
-
     res.status(200).json({
-        status: 'Delete tour success',
+        status: `Delete tour ${req.params.id} success`,
         data: {
             tour: '<Deleted tour here ...>'
         }
