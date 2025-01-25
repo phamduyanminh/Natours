@@ -17,6 +17,17 @@ exports.checkID = (req, res, next, val) => {
     next()
 };
 
+exports.checkBody = (req, res, next) => {
+    console.log(`Tour Name: ${req.body.name} - Price: ${req.body.price}`)
+    if(!req.body.name || !req.body.price){
+        return res.status(400).json({
+            status: 'Fail!',
+            message: 'Missing name or price!'
+        })
+    }
+    next()
+}
+
 exports.getAllTours = (req, res) => {
     res.status(200).json({
         status: 'success',
@@ -44,7 +55,7 @@ exports.createTour = (req, res) => {
         res.status(201).json({
             status: 'Add new tour success',
             data: {
-                tour: newTour
+                tour: '<New tour added here ...>'//newTour
             }
         })
     })
