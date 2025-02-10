@@ -30,9 +30,9 @@ const Tour = require('../models/tourModel');
 // }
 
 // Create a new tour
-exports.createTour =  (req, res) => {
+exports.createTour = async (req, res) => {
     try{
-        const newTour = Tour.create(req.body);
+        const newTour = await Tour.create(req.body);
         console.log(req.body)
         res.status(201).json({
             status: 'Add new tour success',
@@ -51,14 +51,22 @@ exports.createTour =  (req, res) => {
 };
 
 // Retrieve all tours
-exports.getAllTours = (req, res) => {
-    // res.status(200).json({
-    //     status: 'success',
-    //     results: tours.length,
-    //     data: {
-    //         tours: tours
-    //     }
-    // })
+exports.getAllTours = async (req, res) => {
+    try{
+        const tours = await Tour.find()
+        res.status(200).json({
+            status: 'success',
+            results: tours.length,
+            data: {
+                tours: tours
+            }
+        })
+    }catch(err){
+        res.status(404).json({
+            status: 'Fail!',
+            message: err
+        })
+    }
 };
 
 // Retrieve a tour with ID
