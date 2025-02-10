@@ -70,13 +70,21 @@ exports.getAllTours = async (req, res) => {
 };
 
 // Retrieve a tour with ID
-exports.getTour = (req, res) => {
-    // res.status(200).json({
-    //     status: `Retrieve tour ${req.params.id} success`,
-    //     data: {
-    //         tour: tours[req.params.id]
-    //     }
-    // })
+exports.getTour = async (req, res) => {
+    try{
+        const tour = await Tour.findById(req.params.id)
+        res.status(200).json({
+            status: `Retrieve tour ${req.params.id} success`,
+            data: {
+                tour: tour
+            }
+        })
+    }catch(err){
+        res.status(404).json({
+            status: 'Fail!',
+            message: err
+        })
+    }
 };
 
 // Update a tour with ID
