@@ -1,9 +1,11 @@
 const Tour = require('../models/tourModel');
 
 
-
-// We don't have to check Id anymore since we use mongoose
-// For reference, go to tourRoutes.js to see how we call and check Id
+/**
+ * We don't have to check Id and checkBody anymore since we use mongoose
+ * For reference, go to tourRoutes.js to see how we call and check Id & checkBody
+ * Code in tourRoutes.js: router.param('id', tourController.checkID);
+ */
 // exports.checkID = (req, res, next, val) => {
 //     console.log(`Tour id is: ${val}`)
 //     if(req.params.id * 1 > tours.length){
@@ -16,17 +18,39 @@ const Tour = require('../models/tourModel');
 //     next()
 // };
 
-exports.checkBody = (req, res, next) => {
-    console.log(`Tour Name: ${req.body.name} - Price: ${req.body.price}`)
-    if(!req.body.name || !req.body.price){
-        return res.status(400).json({
-            status: 'Fail!',
-            message: 'Missing name or price!'
+// exports.checkBody = (req, res, next) => {
+//     console.log(`Tour Name: ${req.body.name} - Price: ${req.body.price}`)
+//     if(!req.body.name || !req.body.price){
+//         return res.status(400).json({
+//             status: 'Fail!',
+//             message: 'Missing name or price!'
+//         })
+//     }
+//     next()
+// }
+
+// Create a new tour
+exports.createTour =  (req, res) => {
+    try{
+        const newTour = Tour.create(req.body);
+        console.log(req.body)
+        res.status(201).json({
+            status: 'Add new tour success',
+            data: {
+                tour: newTour
+            }
         })
     }
-    next()
-}
+    catch(err){
+        res.status(400).json({
+            status: 'Fail!',
+            message: err
+        })
+    }
+    console.log('Done with creating new tour')
+};
 
+// Retrieve all tours
 exports.getAllTours = (req, res) => {
     // res.status(200).json({
     //     status: 'success',
@@ -37,6 +61,7 @@ exports.getAllTours = (req, res) => {
     // })
 };
 
+// Retrieve a tour with ID
 exports.getTour = (req, res) => {
     // res.status(200).json({
     //     status: `Retrieve tour ${req.params.id} success`,
@@ -46,18 +71,7 @@ exports.getTour = (req, res) => {
     // })
 };
 
-exports.createTour = (req, res) => {
-    res.status(201).json({
-        status: 'Add new tour success',
-        data: {
-            // tour: '<New tour added here ...>'//newTour
-        }
-    })
-
-    console.log(newTour)
-    console.log('Done with posting')
-};
-
+// Update a tour with ID
 exports.updateTour = (req, res) => {
     res.status(200).json({
         status: `Update tour ${req.params.id} success`,
@@ -67,6 +81,7 @@ exports.updateTour = (req, res) => {
     })
 };
 
+// Delete a tour with ID
 exports.deleteTour = (req, res) => {
     res.status(200).json({
         status: `Delete tour ${req.params.id} success`,
