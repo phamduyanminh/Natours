@@ -52,8 +52,16 @@ exports.createTour = async (req, res) => {
 
 // Retrieve all tours
 exports.getAllTours = async (req, res) => {
+    //Build query
+    const queryObj = {...req.query}
+    const excludeFields = ['page', 'sort', 'limit', 'fields']
+    excludeFields.forEach(el => delete queryObj[el])
+    const query = Tour.find(queryObj)
+
+    //Execute query
+    const tours = await query
+    //Send response
     try{
-        const tours = await Tour.find()
         res.status(200).json({
             status: 'success',
             results: tours.length,
