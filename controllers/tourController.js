@@ -53,16 +53,28 @@ exports.createTour = async (req, res) => {
 // Retrieve all tours
 exports.getAllTours = async (req, res) => {
     // Build query
-    // 1) Basic filtering
+    // 1A) Basic filtering
     const queryObj = {...req.query}
     const excludeFields = ['page', 'sort', 'limit', 'fields']
     excludeFields.forEach(el => delete queryObj[el])
 
-    // 2) Advanced filtering
+    // 1B) Advanced filtering
     let queryStr = JSON.stringify(queryObj) // convert object to string
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, matchString => `$${matchString}`) // implment regex too find match string symbol(gte, gt, lte, lt)
 
-    const query = Tour.find(JSON.parse(queryStr))
+    let query = Tour.find(JSON.parse(queryStr))
+
+    // 2) Sorting
+    // split string into array, join array into string
+    // allows us to sort by multiple fields at the same time
+    if(req.query.sort){
+        const sortBy = req.query.sort.split(',').join('') 
+        query = query.sort(sortBy)
+    }else{
+        query = query.sort('-createdAt') // set default sort to createdAt (newest tours) as default
+    }
+
+
     //Execute query
     const tours = await query
     //Send response
