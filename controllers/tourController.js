@@ -52,12 +52,17 @@ exports.createTour = async (req, res) => {
 
 // Retrieve all tours
 exports.getAllTours = async (req, res) => {
-    //Build query
+    // Build query
+    // 1) Basic filtering
     const queryObj = {...req.query}
     const excludeFields = ['page', 'sort', 'limit', 'fields']
     excludeFields.forEach(el => delete queryObj[el])
-    const query = Tour.find(queryObj)
 
+    // 2) Advanced filtering
+    let queryStr = JSON.stringify(queryObj) // convert object to string
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, matchString => `$${matchString}`) // implment regex too find match string symbol(gte, gt, lte, lt)
+
+    const query = Tour.find(JSON.parse(queryStr))
     //Execute query
     const tours = await query
     //Send response
