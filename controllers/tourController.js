@@ -82,6 +82,22 @@ exports.getAllTours = async (req, res) => {
         query = query.select('-__v') // exclude (remove) __v field in mongodb as default, don't need to show it on client side
     }
 
+    // 4) Pagination
+    let page = req.query.page*1 || 1 // convert string to number, default page is 1
+    let limit = req.query.limit*1 || 10 // convert string to number, default limit is 10
+    let skip = (page-1)*limit
+    query = query.skip(skip).limit(limit)
+    // Handling error if the user select page that is not exist
+    if(req.query.page){
+        const numTours = await Tour.countDocuments()
+        if(skip >= numTours){
+            return res.status(404).json({
+                status: 'Fail!',
+                message: 'This page does not exist'
+            })
+        }
+    }
+
     //Execute query
     const tours = await query
     //Send response
