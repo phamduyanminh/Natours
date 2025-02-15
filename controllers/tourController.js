@@ -37,6 +37,63 @@ exports.aliasTopTours = (req, res, next) => {
     next();
 }
 
+
+class APIFeatures{
+    constructor(query, queryString){
+        this.query = query
+        this.queryString = queryString
+    }
+
+    // Filtering
+    filter(){
+        // Basic filtering
+        const queryObj = {...this.queryString}
+        const excludeFields = ['page', 'sort', 'limit', 'fields']
+        excludeFields.forEach(el => delete queryObj[el])
+
+        // Advanced filtering
+        let queryStr = JSON.stringify(queryObj) // convert object to string
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, matchString => `$${matchString}`) // implment regex too find match string symbol(gte, gt, lte, lt)
+
+        this.query = this.query.find(JSON.parse(queryStr))
+        return this
+    }
+
+    // Sorting
+    sort(){
+        // split string into array, join array into string
+        // allows us to sort by multiple fields at the same time
+        if(this.queryString.sort){
+            const sortBy = this.queryString.sort.split(',').join('') 
+            this.query = this.query.sort(sortBy)
+        }else{
+            this.query = this.query.sort('-createdAt') // set default sort to createdAt (newest tours) as default
+        }
+        return this
+    }
+
+    // Fields limiting
+    limitFields(){
+        if(this.queryString.fields){
+            const fields = this.queryString.fields.split(',').join(' ')
+            this.query = this.query.select(fields)
+        }else{
+            this.query = this.query.select('-__v') // exclude (remove) __v field in mongodb as default, don't need to show it on client side
+        }
+        return this
+    }
+
+    // Pagination
+    paginate(){
+        const page = this.queryString.page * 1 || 1  // convert string to number, default page is 1
+        const limit = this.queryString.limit * 1 || 10  // convert string to number, default limit is 10
+        const skip = (page - 1) * limit
+        this.query = this.query.skip(skip).limit(limit)
+        return this
+    }
+}
+
+
 // Create a new tour
 exports.createTour = async (req, res) => {
     try{
@@ -60,54 +117,13 @@ exports.createTour = async (req, res) => {
 
 // Retrieve all tours
 exports.getAllTours = async (req, res) => {
-    // Build query
-    // 1A) Basic filtering
-    const queryObj = {...req.query}
-    const excludeFields = ['page', 'sort', 'limit', 'fields']
-    excludeFields.forEach(el => delete queryObj[el])
-
-    // 1B) Advanced filtering
-    let queryStr = JSON.stringify(queryObj) // convert object to string
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, matchString => `$${matchString}`) // implment regex too find match string symbol(gte, gt, lte, lt)
-
-    let query = Tour.find(JSON.parse(queryStr))
-
-    // 2) Sorting
-    // split string into array, join array into string
-    // allows us to sort by multiple fields at the same time
-    if(req.query.sort){
-        const sortBy = req.query.sort.split(',').join('') 
-        query = query.sort(sortBy)
-    }else{
-        query = query.sort('-createdAt') // set default sort to createdAt (newest tours) as default
-    }
-
-    // 3) Field limiting
-    if(req.query.fields){
-        const fields = req.query.fields.split(',').join(' ')
-        query = query.select(fields)
-    }else{
-        query = query.select('-__v') // exclude (remove) __v field in mongodb as default, don't need to show it on client side
-    }
-
-    // 4) Pagination
-    let page = req.query.page*1 || 1 // convert string to number, default page is 1
-    let limit = req.query.limit*1 || 10 // convert string to number, default limit is 10
-    let skip = (page-1)*limit
-    query = query.skip(skip).limit(limit)
-    // Handling error if the user select page that is not exist
-    if(req.query.page){
-        const numTours = await Tour.countDocuments()
-        if(skip >= numTours){
-            return res.status(404).json({
-                status: 'Fail!',
-                message: 'This page does not exist'
-            })
-        }
-    }
-
     //Execute query
-    const tours = await query
+    const features = new APIFeatures(Tour.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate()
+    const tours = await features.query 
     //Send response
     try{
         res.status(200).json({
